@@ -1,0 +1,10 @@
+{
+    "DeploymentMethod": "lambda",
+    "Functions": {
+        "todo_get": {
+            "PhysicalId": {
+                "eu-west-1": "todo_get"
+            }
+        }
+    }
+}

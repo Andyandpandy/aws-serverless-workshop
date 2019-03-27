@@ -1,0 +1,10 @@
+{
+    "DeploymentMethod": "lambda",
+    "Functions": {
+        "todo_delete": {
+            "PhysicalId": {
+                "eu-west-1": "todo_delete"
+            }
+        }
+    }
+}
