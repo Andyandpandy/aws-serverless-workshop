@@ -1,0 +1,55 @@
+
+service: coolstuff 
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+  region: eu-west-1
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+      - "dynamodb:*"
+      Resource: "*"
+
+functions:
+  get_my_todo:
+    handler: todo_get.handler
+    events:
+      - http:
+          path: /
+          method: get
+          cors: true
+  patch_my_todo:
+    handler: todo_patch.handler
+    events:
+      - http:
+          path: /
+          method: patch
+          cors: true
+  post_my_todo:
+    handler: todo_post.handler
+    events:
+      - http:
+          path: /
+          method: post
+          cors: true
+  delete_my_todo:
+    handler: todo_delete.handler
+    events:
+      - http:
+          path: /
+          method: delete
+          cors: true
+
+
+# you can add CloudFormation resource templates here
+#resources:
+#  Resources:
+#    NewResource:
+#      Type: AWS::S3::Bucket
+#      Properties:
+#        BucketName: my-new-bucket
+#  Outputs:
+#     NewOutput:
+#       Description: "Description for the output"
+#       Value: "Some output value"
