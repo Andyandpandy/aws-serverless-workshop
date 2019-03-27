@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>To-Do</title>
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.css" rel="stylesheet"/>
+        <script src="https://unpkg.com/react@16/umd/react.development.js" crossorigin></script>
+        <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js" crossorigin></script>
+        <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+        <script src="https://unpkg.com/prop-types@15.6/prop-types.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.js"></script>
+
+        <style>
+            .Todo {
+                margin: 1% auto;
+                padding: 16px;
+            }
+            .myContainer {
+                width: 80%;
+
+                margin: 4% auto;
+                border: 1px silver solid;
+                border-radius: 4px;
+                box-shadow: 2px 4px 4px #888888;
+
+            }
+            .timestamps {
+                font-size: 0.6em;
+                color: #888888;
+            }
+            .editButtons {
+                float: right;
+            }
+
+            .buttonMargin {
+                margin: 1%;
+            }
+
+            .centerIcons {
+                text-align: center;
+            }
+
+        </style>
+    </head>
+    <body>
+        <div class="ui clearing segment">
+            <h5 style="padding: 8px 8px 0;" class="ui right floated  header">
+                <a style="color:lightslategrey" href="https://github.com/Andyandpandy/aws-serverless-workshop">
+                    View on GitHub
+                </a>
+            </h5>
+            <h5 style="padding: 8px 0 0 8px;" class="ui left floated grey header">
+                Created by Andreas for AWS Serverless workshop
+            </h5>
+        </div>
+        <div class="myContainer" id="content">
+
+        </div>
+        <script type="text/babel">
+
+            // CHANGE THIS URL
+            let url = "https://y9ojosulu0.execute-api.eu-west-1.amazonaws.com/dev"
+
+            class MyTodos extends React.Component{
+
+                constructor(props){
+                    super(props);
+                    this.state = {
+                        todos: [],
+                        isLoading: false,
+                        newContent: undefined
+                    }
+                }
+
+                componentDidMount(){
+                    this.getTodos()
+                }
+
+                waitSeconds = (iMilliSeconds) => {
+                    var counter= 0
+                        , start = new Date().getTime()
+                        , end = 0;
+                    while (counter < iMilliSeconds) {
+                        end = new Date().getTime();
+                        counter = end - start;
+                    }
+                }
+
+                getTodos(delay){
+
+                    this.setState({
+                        isLoading : true,
+                        todos: []
+                    });
+                    if (delay){
+                        this.waitSeconds(1600);
+                    }
+                    fetch(url, {
+                        method: 'get'
+                    })
+                        .then(response => response.json())
+                        .then(response => this.setState({
+                            todos: response.data.Items
+                                .map((item) => [item.tid, item.timestamp, item.content])
+                                .sort((a,b) => b[1] - a[1]),
+                            isLoading : false}))
+                        .catch(error => console.error('Error:', error))
+                }
+
+                onTodoDelete(tid){
+                    let data = this.state.todos.filter((item) => {
+                        return item[0] !== tid
+                    })
+                    this.setState({
+                        todos : data
+                    });
+                }
+
+                onAddModal(){
+                    $('.ui.modal').modal("show");
+                }
+
+                onTodoAdd(e){
+                    e.preventDefault();
+                    this.setState({
+                        isLoading: true
+                    });
+                    fetch(url, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            "content": this.state.newContent,
+                        }),
+                        headers: {
+                            "Content-Type": "application/json",
+                            // "Content-Type": "application/x-www-form-urlencoded",
+                        },
+                        mode: "cors",
+                        cache: "no-cache",
+                    })
+                        .then(response => response.json())
+                        .then(() => this.onTodoClose())
+                        .then(() => this.setState({
+                            isLoading: false,
+                            newContent: undefined
+                        }))
+                        .then(() => this.getTodos(true))
+                        .catch(error => console.error('Error:', error));
+                }
+
+                onTodoClose(){
+                    $('.ui.modal').modal("hide");
+                }
+
+
+                render(){
+                    const state = this.state;
+                    const formHtml = state.todos.map((todo) => <Todo
+                        key={todo[0]}
+                        tid={todo[0]}
+                        timestamp={todo[1]}
+                        content={todo[2]}
+                        deleteCallback={(id) => this.onTodoDelete(id)} />
+                        );
+                    const contentHtml = state.isLoading ? (
+                        <div className="ui segment">
+                            <div className="ui active inverted dimmer">
+                                <div className="ui text loader">Loading</div>
+                            </div>
+                            <p></p>
+                        </div>
+                    ) : (
+                        <div><div>
+                            <h2 className="ui header" style={{padding: 32 + "px", display: "inline-block"}}>Todos</h2>
+                            <button className="ui button positive" style={{float: "right", display: "inline-block", margin: 16 + "px"}} onClick={() => this.onAddModal()}><i className="add icon"></i></button>
+                                </div>
+                                <div className="ui container" style={{margin: 4 + "%"}}>
+                            <div className="ui divided items">
+                                    <form>
+                                    {formHtml}
+                            </form>
+                            </div>
+                            </div>
+                        </div>
+                    );
+                    return (
+                        <div>
+                            <div className="ui modal">
+                                <i className="close icon"></i>
+                                <div className="header">
+                                    Add a Todo
+                                </div>
+                                <div className="ui fluid input">
+                                    <input id="addInput" type="text" onChange={(e) => this.setState({ newContent: e.target.value })} placeholder="Type in a new todo..." />
+                                </div>
+                                <div className="buttonMargin">
+                                    <div className="editButtons"><button className={"ui " + ( this.state.isLoading ? "loading" : "" ) + " positive button"} onClick={(e) => this.onTodoAdd(e)}>Add</button></div>
+                                    <div className="ui button editButtons" onClick={() => this.onTodoClose()}>Cancel</div>
+                                </div>
+
+                            </div>
+
+                            {contentHtml}
+
+                        </div>
+                    );
+                }
+
+            }
+
+            class Todo extends React.Component {
+
+                constructor(props){
+                    super(props);
+
+                    this.state = {
+                        tid: props.tid,
+                        currentContent: props.content,
+                        content: props.content,
+                        actualTimestamp: props.timestamp,
+                        timestamp: new Date(Number.parseInt(props.timestamp)).toLocaleString(),
+                        isDisabled: true,
+                        isLoading: false,
+                        deleteCallback: props.deleteCallback
+                    };
+                }
+
+                onClickEditToggle(e){
+                    e.preventDefault();
+                    this.setState({isDisabled: !this.state.isDisabled})
+                }
+
+                onClickSave(e){
+                    e.preventDefault();
+                    this.setState({
+                        isLoading: true
+                    });
+                    fetch(url, {
+                        method: 'PATCH',
+                        body: JSON.stringify({
+                            "tid": this.state.tid,
+                            "content": this.state.content,
+                            "timestamp": this.state.actualTimestamp
+                        }),
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        mode: "cors",
+                        cache: "no-cache",
+                    })
+                        .then(response => response.json())
+                        .then(() => this.setState({
+                            isLoading: false,
+                            isDisabled: !this.state.isDisabled,
+                            currentContent: this.state.content
+                        }))
+                        .catch(error => console.error('Error:', error));
+                }
+
+                onClickCancel(e){
+                    e.preventDefault();
+                    this.setState({
+                        isDisabled: !this.state.isDisabled,
+                        content: this.state.currentContent
+                    })
+                }
+
+                onClickDelete(e){
+                    e.preventDefault();
+                    this.setState({
+                        isLoading: true
+                    })
+                    fetch(url, {
+                        method: 'DELETE',
+                        body: JSON.stringify({
+                            "tid": this.state.tid,
+                            "timestamp": this.state.actualTimestamp
+                        }),
+                        headers: {
+                            "Content-Type": "application/json",
+                            // "Content-Type": "application/x-www-form-urlencoded",
+                        },
+                        mode: "cors",
+                        cache: "no-cache",
+                    })
+                        .then(response => response.json())
+                        .then(() => this.setState({ loading: false }))
+                        .then(() => this.state.deleteCallback(this.state.tid))
+                        .catch(error => console.error('Error:', error));
+                }
+
+                render(){
+                    const state = this.state;
+                    let editHtml;
+                    if (state.isDisabled){
+                        editHtml = (
+                            <div className="editButtons">
+                                <button className="ui button" style={{marginRight: 16 + "px"}} onClick={(e) => this.onClickEditToggle(e)}><i className="edit icon"></i></button>
+                                <button className={"ui " + (state.isLoading ? "loading" : "" ) + " negative button"} onClick={(e) => this.onClickDelete(e)}><i className="x icon"></i></button>
+                            </div>
+                        );
+                    }else {
+                        editHtml = (
+                            <div className="ui buttons editButtons">
+                                <button className="ui button" onClick={(e) => this.onClickCancel(e)}>Cancel</button>
+                                <div className="or"></div>
+                                <button id="saveBtn" className={"ui " + (state.isLoading ? "loading" : "") + " positive button"} onClick={(e) => this.onClickSave(e)}>Save</button>
+                            </div>
+                        );
+                    }
+
+                    return (
+                        <div className="Todo">
+                            <div className="content">
+                                <div className="ui fluid icon input">
+                                    <input className="ui input"
+                                           value={state.content}
+                                           onChange={(e) => this.setState({ content: e.target.value })}
+                                           disabled={state.isDisabled}
+                                           style={{marginRight: 16 + "px"}} />
+
+                                    {editHtml}
+                                </div>
+                                <div className="extra">
+                                    <p className="timestamps">{state.timestamp} </p>
+                                </div>
+                            </div>
+                        </div>
+                    );
+                }
+            }
+
+            ReactDOM.render(<MyTodos/>, document.getElementById("content"))
+        </script>
+
+    </body>
+</html>
