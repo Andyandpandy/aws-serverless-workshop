@@ -19,13 +19,6 @@ functions:
           path: /
           method: get
           cors: true
-  patch_my_todo:
-    handler: todo_patch.handler
-    events:
-      - http:
-          path: /
-          method: patch
-          cors: true
   post_my_todo:
     handler: todo_post.handler
     events:
@@ -33,11 +26,18 @@ functions:
           path: /
           method: post
           cors: true
+  patch_my_todo:
+    handler: todo_patch.handler
+    events:
+      - http:
+          path: /{tid}
+          method: patch
+          cors: true
   delete_my_todo:
     handler: todo_delete.handler
     events:
       - http:
-          path: /
+          path: /{tid}
           method: delete
           cors: true
 
