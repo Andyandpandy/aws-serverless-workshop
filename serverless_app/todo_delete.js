@@ -8,7 +8,7 @@ const table = "todos";
 module.exports.handler = (event, context, callback) => {
   
   const body = JSON.parse(event.body)
-  const tid = body.tid;
+  const tid = event.pathParameters.tid;
   const timestamp = body.timestamp;
     
   deleteTodo(tid, timestamp, (err, result) => {

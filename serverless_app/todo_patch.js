@@ -9,24 +9,24 @@ const table = "todos";
 module.exports.handler = (event, context, callback) => {
     const body = JSON.parse(event.body)
     const content = body.content;
-      const tid = body.tid;
-      const timestamp = body.timestamp;
-  
-      updateData(tid, timestamp, content, function(err,result){
-          if (err) {
-              
-              //context.fail('Error in get: ' + err);
-              callback(err, null);
-          }else {
-              //context.succeed(result);
-              callback(null, { statusCode: 200, 
-            headers: {
-              "Access-Control-Allow-Origin" : "*", // Required for CORS support to work
-              "Access-Control-Allow-Credentials" : true // Required for cookies, authorization headers with HTTPS
-            },
-            body: JSON.stringify(result)});
-          }
-      });
+    const tid = event.pathParameters.tid;
+    const timestamp = body.timestamp;
+        
+    updateData(tid, timestamp, content, function(err,result){
+        if (err) {
+            
+            //context.fail('Error in get: ' + err);
+            callback(err, null);
+        }else {
+            //context.succeed(result);
+            callback(null, { statusCode: 200, 
+        headers: {
+            "Access-Control-Allow-Origin" : "*", // Required for CORS support to work
+            "Access-Control-Allow-Credentials" : true // Required for cookies, authorization headers with HTTPS
+        },
+        body: JSON.stringify(result)});
+        }
+    });
   };
 
 
